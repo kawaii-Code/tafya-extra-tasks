@@ -196,7 +196,7 @@ FSA minimize(const FSA &a) {
     std::set<int> non_final_states;
     for (int i = 0; i < a.δ.size(); i++) {
         if (a.F[i]) {
-            final_Q.insert(i);
+            final_states.insert(i);
         } else {
             non_final_states.insert(i);
         }
@@ -205,12 +205,21 @@ FSA minimize(const FSA &a) {
     assert(final_states.size() > 0);
     assert(non_final_states.size() > 0);
 
-    std::set<std::set<int>> P = {final_Q, non_final_states};
-    std::set<std::set<int>> W = {final_Q, non_final_states};
+    std::set<std::set<int>> P;
+    std::set<std::set<int>> W;
+    if (final_states.size() > 0) {
+        P.insert(final_states);
+        W.insert(final_states);
+    }
+    if (non_final_states.size() > 0) {
+        P.insert(non_final_states);
+        W.insert(non_final_states);
+    }
     while (!W.empty()) {
         auto first = W.begin();
         std::set<int> A = *first;
         W.erase(first);
+        debug(A);
 
         for (int letter = 0; letter < a.Σ.size(); letter++) {
             std::set<int> X;
@@ -237,6 +246,8 @@ FSA minimize(const FSA &a) {
                     continue;
                 }
 
+                debug(X);
+                debug(Y);
                 P.erase(it);
                 P.insert(intersection);
                 P.insert(difference);
@@ -264,14 +275,15 @@ FSA minimize(const FSA &a) {
     a_min.F = std::vector<bool>(P.size(), false);
     a_min.s = -1;
 
-
     std::map<int, int> state_map;
     int state_id = 0;
     for (const auto &p: P) {
         for (auto e: p) {
             state_map[e] = state_id;
         }
-        state_id += 1;
+        if (p.size() != 0) {
+            state_id += 1;
+        }
     }
 
     for (const auto &p: P) {

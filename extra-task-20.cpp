@@ -72,9 +72,6 @@ FSA minimize(const FSA &a) {
         }
     }
 
-    assert(final_states.size() > 0);
-    assert(non_final_states.size() > 0);
-
     std::set<std::set<int>> P;
     std::set<std::set<int>> W;
     if (final_states.size() > 0) {
@@ -89,7 +86,6 @@ FSA minimize(const FSA &a) {
         auto first = W.begin();
         std::set<int> A = *first;
         W.erase(first);
-        debug(A);
 
         for (int letter = 0; letter < a.Σ.size(); letter++) {
             std::set<int> X;
@@ -116,8 +112,6 @@ FSA minimize(const FSA &a) {
                     continue;
                 }
 
-                debug(X);
-                debug(Y);
                 P.erase(it);
                 P.insert(intersection);
                 P.insert(difference);
@@ -229,24 +223,13 @@ void print_fsa_to_dot_file(const FSA &a, const std::string &filename) {
 }
 
 int main() {
-    int n;
-    std::cin >> n;
-
-    {
-        // Типичный C++
-        std::string trash;
-        std::getline(std::cin, trash);
-    }
-
     std::vector<bool> important_states;
     FSA a;
     a.s = 0;
-    a.Q["q0"] = 0;
+    a.Q["0"] = 0;
     important_states.push_back(false);
-    for (int iter = 0; iter < n; iter++) {
-        std::string line;
-        getline(std::cin, line);
-
+    std::string line;
+    while (std::getline(std::cin, line)) {
         std::istringstream ifs(line);
 
         std::string plus_or_minus;
@@ -258,7 +241,9 @@ int main() {
                 int next_id = a.Σ.size();
                 a.Σ[token] = next_id;
                 if (a.δ.size() > 0) {
-                    a.δ[0].push_back(0);
+                    for (int i = 0; i < a.δ.size(); i++) {
+                        a.δ[i].push_back(0);
+                    }
                     assert(a.Σ.size() == a.δ[0].size());
                 }
             }
@@ -331,23 +316,4 @@ int main() {
     }
 
     a = patch_up_fsa(a);
-
-    std::string line;
-    while (std::getline(std::cin, line)) {
-        int q = a.s;
-
-        std::istringstream ifs(line);
-        std::string token;
-        while (ifs >> token) {
-            int letter = a.Σ[token];
-            q = a.δ[q][letter];
-            assert(0 <= q && q < a.δ.size());
-        }
-
-        if (a.F[q]) {
-            std::cout << "YES\n";
-        } else {
-            std::cout << "NO\n";
-        }
-    }
 }
